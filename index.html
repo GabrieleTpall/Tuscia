@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>TomTomTuscia</title>
+  <meta name="description" content="TomTomTuscia – Itinerari trekking su mappa OpenStreetMap con caricamento GPX automatico." />
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <!-- LocateControl CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
+  <style>
+    :root{
+      --bg:#fffef9;
+      --ink:#1f2937;           /* grigio scuro leggibile al sole */
+      --muted:#6b7280;
+      --brand:#166534;         /* verde bosco */
+      --brand-2:#8b5e34;       /* terra */
+      --accent:#10b981;        /* verde chiaro */
+      --danger:#b91c1c;
+      --card:#ffffff;
+      --ring:#2563eb;
+    }
+    * { box-sizing: border-box; }
+    html, body, #app { height: 100%; margin: 0; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--ink); }
+    a { color: var(--brand); }
+    a:focus, button:focus, input:focus { outline: 3px solid var(--ring); outline-offset: 2px; }
+    /* Header */
+    header {
+      position: fixed; inset: 0 0 auto 0; z-index: 1000;
+      display: grid; grid-template-columns: auto 1fr auto auto;
+      gap: .5rem; align-items: center;
+      padding: .5rem .75rem env(safe-area-inset-top) .75rem;
+      background: rgba(255,254,249,.95); backdrop-filter: saturate(160%) blur(6px);
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .logo { font-weight: 800; letter-spacing:.2px; color: var(--brand); font-size: 1.05rem; }
+    .search-wrap { position: relative; max-width: 680px; width: 100%; }
+    #search {
+      width: 100%; padding: .6rem .8rem; border-radius: .75rem; border:1px solid #d1d5db; background:#fff;
+      font-size: 1rem;
+    }
+    .header-btn {
+      appearance: none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
+      border-radius:.75rem; padding:.55rem .7rem; font-weight:600; cursor:pointer; min-width:44px; min-height:44px;
+    }
+    .header-btn:hover { border-color:#9ca3af; }
+    .icon { font-size: 1.1rem; }
+    /* Map */
+    #map { position: absolute; inset: 56px 0 0 0; } /* under header */
+    @media (min-width:640px){ #map{ inset: 60px 0 0 0; } }
+    /* Modal / Drawer */
+    .backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 1100;
+      display:none;
+    }
+    .backdrop[aria-hidden="false"]{ display:block; }
+    .drawer {
+      position: fixed; inset: auto 0 0 0; max-height: 78vh; background: var(--card);
+      border-top-left-radius: 16px; border-top-right-radius: 16px; box-shadow: 0 -10px 30px rgba(0,0,0,.25);
+      transform: translateY(100%); transition: transform .28s ease; z-index: 1200;
+    }
+    .drawer.open { transform: translateY(0); }
+    .drawer-header { display:flex; align-items:center; justify-content:space-between; padding: .75rem 1rem; border-bottom:1px solid #e5e7eb; }
+    .drawer-title { font-weight:800; color:var(--brand); }
+    .drawer-body { padding: .25rem .5rem 1rem; overflow:auto; max-height: calc(78vh - 56px); }
+    .route {
+      display:grid; grid-template-columns: 1fr; gap:.35rem; padding: .65rem .6rem; border:1px solid #e5e7eb; border-radius: 14px; margin:.5rem;
+      background: #fff;
+    }
+    .route h3 { margin:0; font-size:1rem; }
+    .meta { color:var(--muted); font-size:.9rem; display:flex; flex-wrap: wrap; gap:.5rem; }
+    .actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+    .btn {
+      appearance:none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
+      border-radius: 12px; padding:.45rem .6rem; font-weight:600; cursor:pointer; min-height:40px;
+    }
+    .btn.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
+    .btn.ghost { background:#fff; }
+    .btn.link { border:0; background:transparent; color:var(--brand); text-decoration: underline; padding:0; min-height:auto; }
+    /* Popup content */
+    .popup { font-size:.95rem; }
+    .popup .meta { font-size:.85rem; margin:.2rem 0 .4rem; }
+    .popup .popup-actions { display:flex; gap:.35rem; flex-wrap:wrap; }
+    /* Toast / Live region */
+    #live { position: fixed; left: .75rem; right: .75rem; bottom: .75rem; z-index:1400; }
+    .toast {
+      background:#111827; color:#fff; padding:.65rem .8rem; border-radius: 14px; margin-top:.5rem; box-shadow: 0 6px 22px rgba(0,0,0,.3);
+    }
+    .toast.warn { background: var(--danger); }
+    /* Loading screen (brief) */
+    .splash {
+      position: fixed; inset:0; display:grid; place-items:center; background:var(--bg); z-index:2000;
+      transition: opacity .3s ease, visibility .3s ease;
+    }
+    .splash.hidden { opacity:0; visibility:hidden; }
+    .brand-mark { display:flex; flex-direction:column; align-items:center; gap:.5rem; }
+    .brand-mark .title { font-weight:800; color:var(--brand); font-size:1.3rem; }
+    .brand-mark .sub { color:var(--muted); font-size:.95rem; }
+    /* Summary panel */
+    .summary {
+      position: fixed; right:.5rem; top: calc(env(safe-area-inset-top) + 64px);
+      background:#ffffff; border:1px solid #e5e7eb; border-radius:14px; padding:.5rem .7rem; z-index:1050; max-width: 320px;
+      box-shadow:0 6px 14px rgba(0,0,0,.08);
+    }
+    .summary h4 { margin:.2rem 0 .3rem; font-size:.95rem; color:var(--brand-2); }
+    .summary .small { color:var(--muted); font-size:.85rem; }
+    @media (max-width: 720px){ .summary { left:.5rem; right:auto; max-width: 90vw; } }
+    /* Utility */
+    .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+  </style>
+</head>
+<body>
+  <!-- Splash / loading -->
+  <div id="splash" class="splash" aria-live="polite">
+    <div class="brand-mark">
+      <svg width="48" height="48" viewBox="0 0 24 24" role="img" aria-label="Logo" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M12 2l3 7 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1z"/>
+      </svg>
+      <div class="title">TomTomTuscia</div>
+      <div class="sub">Caricamento dei percorsi GPX…</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header>
+    <div class="logo" aria-label="Nome applicazione">TomTomTuscia</div>
+    <div class="search-wrap">
+      <label class="sr-only" for="search">Cerca itinerario</label>
+      <input id="search" type="search" placeholder="Cerca per titolo… (es. Palanzana)" autocomplete="off" inputmode="search" />
+    </div>
+    <button id="btn-list" class="header-btn" aria-haspopup="dialog" aria-controls="drawer" title="Apri elenco itinerari">Itinerari</button>
+    <button id="btn-geolocate" class="header-btn" title="Posizione attuale" aria-label="Posizione attuale">
+      <span class="icon">📍</span>
+    </button>
+  </header>
+
+  <!-- Map -->
+  <main id="app" role="application" aria-label="Mappa itinerari">
+    <div id="map"></div>
+  </main>
+
+  <!-- Drawer / Modal -->
+  <div id="backdrop" class="backdrop" aria-hidden="true" aria-label="Sfondo modale"></div>
+  <section id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
+    <div class="drawer-header">
+      <div id="drawer-title" class="drawer-title">Itinerari</div>
+      <button id="drawer-close" class="btn">Chiudi</button>
+    </div>
+    <div class="drawer-body">
+      <div id="routes-list" aria-live="polite" aria-busy="true"></div>
+    </div>
+  </section>
+
+  <!-- Summary panel -->
+  <aside class="summary" aria-live="polite">
+    <h4>Stato caricamento</h4>
+    <div class="small">
+      <div>Tracce caricate: <span id="sum-loaded">0</span> / <span id="sum-total">0</span></div>
+      <div>Con errori: <span id="sum-errors">0</span></div>
+      <div id="sum-messages" class="small"></div>
+    </div>
+  </aside>
+
+  <!-- Live region for toasts -->
+  <div id="live" aria-live="assertive" aria-atomic="true"></div>
+
+  <!-- Leaflet core -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <!-- GPX plugin (only to draw tracks when requested) -->
+  <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
+  <!-- Locate control -->
+  <script src="https://unpkg.com/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
+
+  <script>
+    /*********************************************************
+     * TomTomTuscia – MVP
+     * Single-file app: index.html (inline CSS/JS)
+     * Requirements implemented per specifica.
+     *********************************************************/
+
+    // ======= Data =======
+    const GPX_FILES = [
+      "Anello Blera-Barbarano- Sentiero delle Mole-.gpx",
+      "Castel guiliano corretto.gpx",
+      "Eremo San Leonardo Vallerano.gpx",
+      "Forchetta del Diavolo- Monte Leano.gpx",
+      "Forre di Corchiano.gpx",
+      "Infernaccio.gpx",
+      "Monte Palanzana.gpx",
+      "Parco del Timone Cellere.gpx",
+      "Percorso_eremno_di_poggiio_conte.gpx",
+      "Tra i sassi del predicatore e la selva di Malano.gpx"
+    ];
+
+    const ROUTES = []; // will be populated with parsed metadata
+    const ROUTE_INDEX = new Map(); // id -> route
+    const MARKERS = new Map(); // id -> Leaflet marker
+    let map, tiles, gpxLayer = null, locateControl = null;
+
+    // Debounce helper
+    function debounce(fn, wait=180){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); }; }
+
+    // Toast helper
+    function toast(msg, {warn=false}={}) {
+      const live = document.getElementById('live');
+      const el = document.createElement('div');
+      el.className = 'toast' + (warn ? ' warn' : '');
+      el.textContent = msg;
+      live.appendChild(el);
+      setTimeout(()=>{ el.remove(); }, 4800);
+    }
+
+    // Utility: Pretty numbers
+    const fmt = {
+      km: n => (Math.round(n*10)/10).toFixed(1),
+      m: n => Math.round(n),
+      h: n => (Math.round(n*10)/10).toFixed(1)
+    };
+
+    // Utility: filename -> human title
+    function filenameToTitle(name){
+      const base = name.replace(/\.gpx$/i,'');
+      return base.replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim()
+        .replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    // Haversine distance in meters
+    function haversine(lat1, lon1, lat2, lon2){
+      const R = 6371000;
+      const toRad = x => x * Math.PI/180;
+      const dLat = toRad(lat2-lat1);
+      const dLon = toRad(lon2-lon1);
+      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
+      return 2*R*Math.asin(Math.sqrt(a));
+    }
+
+    // ======= Core functions (per specifica) =======
+
+    async function initMap(){
+      map = L.map('map', { zoomControl: true, preferCanvas: true });
+      tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+      }).addTo(map);
+
+      // locate control (follow)
+      locateControl = L.control.locate({
+        position: 'topleft',
+        setView: 'untilPan',
+        keepCurrentZoomLevel: false,
+        flyTo: true,
+        drawCircle: true,
+        showPopup: false,
+        strings: {
+          title: "Mostra la mia posizione",
+          metersUnit: "metri",
+          feetUnit: "piedi",
+          popup: "Sei nel raggio di {distance} {unit} da questo punto",
+          outsideMapBoundsMsg: "Sembra tu sia fuori dai limiti della mappa"
+        },
+        locateOptions: {
+          enableHighAccuracy: true,
+          maximumAge: 5000,
+          timeout: 15000
+        }
+      }).addTo(map);
+
+      // Events for permission / errors
+      map.on('locationerror', (e) => {
+        toast("Geolocalizzazione non disponibile o permesso negato.", {warn:true});
+      });
+
+      // Load and parse GPX files, then render markers & fit bounds
+      await loadAndParseGpxFiles();
+      renderMarkers();
+      fitAllBounds();
+
+      // Hide splash
+      document.getElementById('splash').classList.add('hidden');
+
+      // UI events
+      document.getElementById('btn-list').addEventListener('click', openItinerariesModal);
+      document.getElementById('drawer-close').addEventListener('click', ()=> toggleDrawer(false));
+      document.getElementById('backdrop').addEventListener('click', ()=> toggleDrawer(false));
+      document.getElementById('btn-geolocate').addEventListener('click', ()=>{
+        startFollowMode();
+      });
+
+      // Search
+      document.getElementById('search').addEventListener('input', debounce(applySearch, 150));
+    }
+
+    function fitAllBounds(){
+      const pts = [];
+      ROUTES.forEach(r => {
+        if (Number.isFinite(r.lat) && Number.isFinite(r.lng)) pts.push([r.lat, r.lng]);
+      });
+      if (pts.length) {
+        map.fitBounds(pts, { padding:[40,40] });
+      } else {
+        map.setView([42.42, 12.08], 9); // fallback: Tuscia-ish area
+      }
+    }
+
+    async function loadAndParseGpxFiles(){
+      const totalEl = document.getElementById('sum-total');
+      const loadedEl = document.getElementById('sum-loaded');
+      const errorsEl = document.getElementById('sum-errors');
+      const messagesEl = document.getElementById('sum-messages');
+      totalEl.textContent = GPX_FILES.length;
+
+      const errors = [];
+      let loaded = 0;
+
+      // Ensure alphabetical list rendering uses parsed ROUTES later
+      for (let i=0;i<GPX_FILES.length;i++){
+        const file = GPX_FILES[i];
+        const url = `./gpx/${file}`;
+        try {
+          const res = await fetch(url, {cache:'no-store'});
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const txt = await res.text();
+          const dom = new DOMParser().parseFromString(txt, "application/xml");
+          // basic parse error check
+          const parserErr = dom.querySelector("parsererror");
+          if (parserErr) throw new Error("GPX malformato");
+
+          const stats = parseGpxToStats(dom, file, url);
+          ROUTES.push(stats);
+          ROUTE_INDEX.set(stats.id, stats);
+          loaded++;
+          loadedEl.textContent = loaded;
+        } catch (err) {
+          console.error("Errore GPX:", file, err);
+          errors.push(`${file} → ${err.message || err}`);
+          errorsEl.textContent = errors.length;
+          messagesEl.innerHTML = `<ul>${errors.map(e=>`<li>${e}</li>`).join('')}</ul>`;
+          toast(`Errore nel caricamento di "${file}". Viene saltato.`, {warn:true});
+          continue; // skip just this file
+        }
+      }
+
+      // After all, render routes list (sorted)
+      ROUTES.sort((a,b)=> a.title.localeCompare(b.title, 'it', {sensitivity:'base'}));
+      renderItinerariesList(ROUTES);
+    }
+
+    function parseGpxToStats(dom, filename, url){
+      // Title
+      const title = (dom.querySelector('metadata > name, gpx > name, trk > name')?.textContent || filenameToTitle(filename)).trim();
+
+      // Description (200–300 char)
+      const rawDesc = (dom.querySelector('metadata > desc, trk > desc, trk > cmt, gpx > desc')?.textContent || '').trim();
+      let description = rawDesc ? rawDesc.replace(/\s+/g,' ').slice(0, 280) : '';
+
+      // Difficulty (fallback "E")
+      let difficulty = dom.querySelector('metadata > type, trk > type')?.textContent?.trim().toUpperCase() || "E";
+      difficulty = (/^(T|E|EE|EEA)$/i.test(difficulty) ? difficulty.toUpperCase() : "E");
+
+      // Points collection: use all <trkpt> in all tracks/segments
+      const trkpts = Array.from(dom.querySelectorAll('trkpt'));
+      // If no trkpt, try rtept (route points)
+      const rtepts = trkpts.length ? [] : Array.from(dom.querySelectorAll('rtept'));
+      const pts = (trkpts.length ? trkpts : rtepts).map(p => {
+        const lat = parseFloat(p.getAttribute('lat'));
+        const lon = parseFloat(p.getAttribute('lon'));
+        const ele = parseFloat(p.querySelector('ele')?.textContent ?? 'NaN');
+        const time = p.querySelector('time')?.textContent ? new Date(p.querySelector('time').textContent).getTime() : NaN;
+        return {lat, lon, ele, time};
+      }).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+
+      // Coordinates for marker: first point else bbox center
+      let lat = NaN, lng = NaN;
+      if (pts.length){
+        lat = pts[0].lat; lng = pts[0].lon;
+      } else {
+        // bbox: try bounds from <bounds> else average of whatever we have
+        const b = dom.querySelector('bounds');
+        if (b) {
+          const minlat = parseFloat(b.getAttribute('minlat')); const minlon = parseFloat(b.getAttribute('minlon'));
+          const maxlat = parseFloat(b.getAttribute('maxlat')); const maxlon = parseFloat(b.getAttribute('maxlon'));
+          lat = (minlat + maxlat)/2; lng = (minlon + maxlon)/2;
+        }
+      }
+
+      // Distance via Haversine with outlier filter (>1 km step)
+      let dist_m = 0;
+      for (let i=1;i<pts.length;i++){
+        const p1 = pts[i-1], p2 = pts[i];
+        if (![p1.lat,p1.lon,p2.lat,p2.lon].every(Number.isFinite)) continue;
+        const d = haversine(p1.lat, p1.lon, p2.lat, p2.lon);
+        if (Number.isFinite(d) && d >= 0 && d <= 1000) dist_m += d; // skip outliers > 1 km
+      }
+
+      // Ascent: sum of positive elevation deltas (threshold 1 m to reduce noise)
+      let ascent = 0;
+      for (let i=1;i<pts.length;i++){
+        const e1 = pts[i-1].ele, e2 = pts[i].ele;
+        if (Number.isFinite(e1) && Number.isFinite(e2)) {
+          const de = e2 - e1;
+          if (de > 1) ascent += de;
+        }
+      }
+      ascent = Math.round(ascent);
+
+      // Time: if timestamps present, use difference; else estimate: (km/4) + (ascent/600)
+      let time_h = NaN;
+      const times = pts.map(p=>p.time).filter(Number.isFinite);
+      if (times.length >= 2){
+        const t = (Math.max(...times) - Math.min(...times)) / 3600000; // ms -> h
+        if (t > 0.05) time_h = t;
+      }
+      if (!Number.isFinite(time_h)) {
+        const dist_km = dist_m/1000;
+        time_h = (dist_km/4) + (ascent/600);
+      }
+      time_h = parseFloat(fmt.h(time_h));
+
+      // Elevation min/max (unused in card, but parsed for completeness)
+      const elevs = pts.map(p=>p.ele).filter(Number.isFinite);
+      const eleMin = elevs.length ? Math.min(...elevs) : NaN;
+      const eleMax = elevs.length ? Math.max(...elevs) : NaN;
+
+      // Distance decimal with 1 decimal
+      const distance_km = parseFloat(fmt.km(dist_m/1000));
+
+      // ID
+      const id = crypto.randomUUID();
+
+      return {
+        id,
+        title,
+        lat, lng,
+        difficulty,                // default handled above
+        distance_km: distance_km,  // Number 1 dec
+        ascent_m: ascent,          // int
+        time_h: time_h,            // Number 1 dec
+        description: description,  // short
+        gpx_url: url,
+        ele_min: eleMin,
+        ele_max: eleMax
+      };
+    }
+
+    function renderMarkers(){
+      // (Re)create markers only if not existing
+      ROUTES.forEach(r => {
+        if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
+        if (MARKERS.has(r.id)) return;
+
+        const m = L.marker([r.lat, r.lng]);
+        m.bindPopup(makePopupHtml(r), {className:'ttt-popup'});
+        m.on('popupopen', () => {
+          // Wire popup buttons after DOM is added
+          wirePopupButtons(r.id);
+        });
+        m.addTo(map);
+        MARKERS.set(r.id, m);
+      });
+    }
+
+    function makePopupHtml(route){
+      return `
+        <div class="popup">
+          <strong>${escapeHtml(route.title)}</strong>
+          <div class="meta">
+            <span>Diff: ${escapeHtml(route.difficulty)}</span>
+            <span>·</span>
+            <span>${fmt.km(route.distance_km)} km</span>
+            <span>·</span>
+            <span>+${fmt.m(route.ascent_m)} m</span>
+            <span>·</span>
+            <span>${fmt.h(route.time_h)} h</span>
+          </div>
+          <div class="popup-actions">
+            <button class="btn primary" data-action="details" data-id="${route.id}">Dettagli</button>
+            <button class="btn" data-action="follow" data-id="${route.id}">Segui il percorso</button>
+            <button class="btn ghost" data-action="download" data-id="${route.id}">Scarica GPX</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function wirePopupButtons(routeId){
+      const container = document.querySelector('.ttt-popup .popup') || document;
+      container.querySelectorAll(`[data-id="${routeId}"]`).forEach(btn=>{
+        const action = btn.getAttribute('data-action');
+        if (action === 'details') btn.addEventListener('click', () => openRouteDetail(routeId));
+        if (action === 'follow') btn.addEventListener('click', () => startFollowOnRoute(routeId));
+        if (action === 'download') btn.addEventListener('click', () => downloadGpx(routeId));
+      });
+    }
+
+    function applySearch(){
+      const q = document.getElementById('search').value.trim().toLowerCase();
+      const filtered = ROUTES.filter(r => r.title.toLowerCase().includes(q));
+      // Update list in modal if open
+      if (document.getElementById('drawer').classList.contains('open')) {
+        renderItinerariesList(filtered);
+      }
+      // Filter markers (hide unmatched)
+      MARKERS.forEach((m, id) => {
+        const r = ROUTE_INDEX.get(id);
+        const matched = filtered.includes(r);
+        if (matched) m.addTo(map); else map.removeLayer(m);
+      });
+      // If 1 result → zoom + popup
+      if (filtered.length === 1){
+        focusRouteOnMap(filtered[0].id, {openPopup:true});
+      }
+      // aria-live for no results
+      if (!filtered.length){
+        toast("Nessun itinerario trovato per la ricerca corrente.");
+      }
+    }
+
+    function openItinerariesModal(){
+      renderItinerariesList(ROUTES);
+      toggleDrawer(true);
+    }
+
+    function renderItinerariesList(list){
+      const wrap = document.getElementById('routes-list');
+      wrap.setAttribute('aria-busy', 'true');
+      if (!list.length) {
+        wrap.innerHTML = `<p>Nessun risultato.</p>`;
+        wrap.setAttribute('aria-busy','false');
+        return;
+      }
+      const html = list.map(r => `
+        <article class="route" data-id="${r.id}">
+          <h3>${escapeHtml(r.title)}</h3>
+          <div class="meta">
+            <span>Diff: ${escapeHtml(r.difficulty)}</span>
+            <span>·</span>
+            <span>${fmt.km(r.distance_km)} km</span>
+            <span>·</span>
+            <span>+${fmt.m(r.ascent_m)} m</span>
+            <span>·</span>
+            <span>${fmt.h(r.time_h)} h</span>
+          </div>
+          ${r.description ? `<p>${escapeHtml(r.description)}</p>` : ``}
+          <div class="actions">
+            <button class="btn primary" data-act="detail" data-id="${r.id}">Apri descrizione</button>
+            <button class="btn" data-act="focus" data-id="${r.id}">Vai in mappa</button>
+            <button class="btn ghost" data-act="download" data-id="${r.id}">Scarica GPX</button>
+          </div>
+        </article>
+      `).join('');
+      wrap.innerHTML = html;
+      wrap.querySelectorAll('[data-act="detail"]').forEach(b=> b.onclick=()=> openRouteDetail(b.dataset.id));
+      wrap.querySelectorAll('[data-act="focus"]').forEach(b=> b.onclick=()=> { toggleDrawer(false); focusRouteOnMap(b.dataset.id, {openPopup:true}); });
+      wrap.querySelectorAll('[data-act="download"]').forEach(b=> b.onclick=()=> downloadGpx(b.dataset.id));
+      wrap.setAttribute('aria-busy', 'false');
+    }
+
+    function openRouteDetail(id){
+      const r = ROUTE_INDEX.get(id);
+      if (!r) return;
+      // Reuse drawer to show detail
+      const wrap = document.getElementById('routes-list');
+      const backBtn = `<button class="btn" id="detail-back">← Indietro</button>`;
+      const html = `
+        ${backBtn}
+        <article class="route">
+          <h3>${escapeHtml(r.title)}</h3>
+          <div class="meta">
+            <span>Diff: ${escapeHtml(r.difficulty)}</span>
+            <span>·</span>
+            <span>${fmt.km(r.distance_km)} km</span>
+            <span>·</span>
+            <span>+${fmt.m(r.ascent_m)} m</span>
+            <span>·</span>
+            <span>${fmt.h(r.time_h)} h</span>
+            ${Number.isFinite(r.ele_min) && Number.isFinite(r.ele_max) ? `<span>·</span><span>${fmt.m(r.ele_min)}–${fmt.m(r.ele_max)} m slm</span>` : ``}
+          </div>
+          ${r.description ? `<p>${escapeHtml(r.description)}</p>` : `<p class="meta">Nessuna descrizione disponibile.</p>`}
+          <div class="actions">
+            <button class="btn primary" onclick="startFollowOnRoute('${r.id}')">Segui il percorso</button>
+            <button class="btn" onclick="focusRouteOnMap('${r.id}', {openPopup:true})">Vai in mappa</button>
+            <button class="btn ghost" onclick="downloadGpx('${r.id}')">Scarica GPX</button>
+          </div>
+        </article>
+      `;
+      wrap.innerHTML = html;
+      toggleDrawer(true);
+      document.getElementById('detail-back').onclick = ()=> renderItinerariesList(ROUTES);
+    }
+
+    function focusRouteOnMap(id, {openPopup=false}={}){
+      const r = ROUTE_INDEX.get(id);
+      if (!r) return;
+      const m = MARKERS.get(id);
+      if (m) {
+        map.setView(m.getLatLng(), Math.max(map.getZoom(), 13), {animate:true});
+        if (openPopup) { m.openPopup(); }
+      }
+    }
+
+    // Follow mode: ensure gpx is drawn, fit bounds, and start geolocation follow
+    async function startFollowOnRoute(id){
+      const r = ROUTE_INDEX.get(id);
+      if (!r) return;
+      await ensureTrackDrawn(r);
+      focusTrackBounds();
+      startFollowMode();
+      toast(`Modalità follow attiva su "${r.title}".`);
+    }
+
+    async function ensureTrackDrawn(route){
+      // Only draw when user presses "Segui il percorso"
+      if (gpxLayer) { map.removeLayer(gpxLayer); gpxLayer = null; }
+      gpxLayer = new L.GPX(route.gpx_url, {
+        async: true,
+        polyline_options: { color: '#065f46', weight: 4, opacity: 0.9 },
+        marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
+      })
+      .on('loaded', (e) => {
+        // Once GPX parsed by plugin, fit will be handled by caller
+      })
+      .on('error', () => {
+        toast('Impossibile disegnare la traccia GPX.', {warn:true});
+      })
+      .addTo(map);
+      // Wait a tick to allow layer to fetch
+      await new Promise(res => setTimeout(res, 50));
+    }
+
+    function focusTrackBounds(){
+      if (gpxLayer && gpxLayer.getBounds && gpxLayer.getBounds().isValid()){
+        map.fitBounds(gpxLayer.getBounds(), { padding:[30,30] });
+      }
+    }
+
+    function startFollowMode(){
+      try {
+        locateControl.start();
+      } catch (e) {
+        // Fallback to map.locate if control not ready
+        map.locate({setView:true, enableHighAccuracy:true});
+      }
+    }
+
+    function stopFollowMode(){
+      try { locateControl.stop(); } catch {}
+    }
+
+    function downloadGpx(id){
+      const r = ROUTE_INDEX.get(id);
+      if (!r) return;
+      const link = document.createElement('a');
+      link.href = r.gpx_url;
+      const niceName = `${r.title.replace(/[^\w\s-]+/g,'').replace(/\s+/g,'_')}.gpx`;
+      link.download = niceName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    }
+
+    // ======= Helpers & UI =======
+    function toggleDrawer(open){
+      const drawer = document.getElementById('drawer');
+      const backdrop = document.getElementById('backdrop');
+      if (open){
+        drawer.classList.add('open');
+        backdrop.setAttribute('aria-hidden', 'false');
+      } else {
+        drawer.classList.remove('open');
+        backdrop.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    // Escape HTML
+    function escapeHtml(str=''){
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    // ======= Exposed per spec =======
+    // (Functions already implemented with these names)
+    // initMap, loadAndParseGpxFiles, parseGpxToStats, renderMarkers, applySearch,
+    // openItinerariesModal, renderItinerariesList, openRouteDetail, focusRouteOnMap,
+    // startFollowMode, stopFollowMode, downloadGpx
+    window.initMap = initMap;
+    window.loadAndParseGpxFiles = loadAndParseGpxFiles;
+    window.parseGpxToStats = parseGpxToStats;
+    window.renderMarkers = renderMarkers;
+    window.applySearch = applySearch;
+    window.openItinerariesModal = openItinerariesModal;
+    window.renderItinerariesList = renderItinerariesList;
+    window.openRouteDetail = openRouteDetail;
+    window.focusRouteOnMap = focusRouteOnMap;
+    window.startFollowMode = startFollowMode;
+    window.stopFollowMode = stopFollowMode;
+    window.downloadGpx = downloadGpx;
+    window.startFollowOnRoute = startFollowOnRoute;
+
+    // ======= Kickoff =======
+    window.addEventListener('DOMContentLoaded', initMap);
+
+  </script>
+
+  <!-- =================== ISTRUZIONI GITHUB PAGES =================== -->
+  <details style="position:fixed; left:.5rem; bottom:.5rem; z-index:1200; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:.4rem .6rem; max-width:calc(100% - 1rem);">
+    <summary><strong>Pubblica su GitHub Pages</strong></summary>
+    <ol>
+      <li>Crea un nuovo repository su GitHub (pubblico).</li>
+      <li>Carica in root <code>index.html</code> e la cartella <code>gpx/</code> con i 10 file esatti:
+        <ul>
+          <li>Anello Blera-Barbarano- Sentiero delle Mole-.gpx</li>
+          <li>Castel guiliano corretto.gpx</li>
+          <li>Eremo San Leonardo Vallerano.gpx</li>
+          <li>Forchetta del Diavolo- Monte Leano.gpx</li>
+          <li>Forre di Corchiano.gpx</li>
+          <li>Infernaccio.gpx</li>
+          <li>Monte Palanzana.gpx</li>
+          <li>Parco del Timone Cellere.gpx</li>
+          <li>Percorso_eremno_di_poggiio_conte.gpx</li>
+          <li>Tra i sassi del predicatore e la selva di Malano.gpx</li>
+        </ul>
+      </li>
+      <li>Vai su <em>Settings → Pages</em> e imposta:
+        <ul><li><strong>Branch</strong>: <code>main</code>, <strong>Folder</strong>: <code>/ (root)</code></li></ul>
+      </li>
+      <li>Apri l’URL pubblico: <code>https://&lt;utente&gt;.github.io/&lt;repo&gt;/</code></li>
+    </ol>
+    <p>Nota: i percorsi ai file GPX sono relativi (<code>./gpx/...</code>) e funzionano sia in locale (con un semplice server statico) sia su Pages.</p>
+  </details>
+</body>
+</html>
