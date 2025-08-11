@@ -11,15 +11,9 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.css" />
   <style>
     :root{
-      --bg:#fffef9;
-      --ink:#1f2937;
-      --muted:#6b7280;
-      --brand:#166534;
-      --brand-2:#8b5e34;
-      --accent:#10b981;
-      --danger:#b91c1c;
-      --card:#ffffff;
-      --ring:#2563eb;
+      --bg:#fffef9; --ink:#1f2937; --muted:#6b7280;
+      --brand:#166534; --brand-2:#8b5e34; --accent:#10b981;
+      --danger:#b91c1c; --card:#ffffff; --ring:#2563eb;
     }
     * { box-sizing: border-box; }
     html, body, #app { height: 100%; margin: 0; }
@@ -27,7 +21,6 @@
     a { color: var(--brand); }
     a:focus, button:focus, input:focus { outline: 3px solid var(--ring); outline-offset: 2px; }
 
-    /* Header */
     header {
       position: fixed; inset: 0 0 auto 0; z-index: 1000;
       display: grid; grid-template-columns: auto 1fr auto auto;
@@ -39,8 +32,7 @@
     .logo { font-weight: 800; letter-spacing:.2px; color: var(--brand); font-size: 1.05rem; }
     .search-wrap { position: relative; max-width: 680px; width: 100%; }
     #search {
-      width: 100%; padding: .6rem .8rem; border-radius: .75rem; border:1px solid #d1d5db; background:#fff;
-      font-size: 1rem;
+      width: 100%; padding: .6rem .8rem; border-radius: .75rem; border:1px solid #d1d5db; background:#fff; font-size: 1rem;
     }
     .header-btn {
       appearance: none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
@@ -49,11 +41,9 @@
     .header-btn:hover { border-color:#9ca3af; }
     .icon { font-size: 1.1rem; }
 
-    /* Map */
-    #map { position: absolute; inset: 56px 0 0 0; } /* under header */
+    #map { position: absolute; inset: 56px 0 0 0; }
     @media (min-width:640px){ #map{ inset: 60px 0 0 0; } }
 
-    /* Modal / Drawer */
     .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 1100; display:none; }
     .backdrop[aria-hidden="false"]{ display:block; }
     .drawer {
@@ -66,35 +56,27 @@
     .drawer-title { font-weight:800; color:var(--brand); }
     .drawer-body { padding: .25rem .5rem 1rem; overflow:auto; max-height: calc(78vh - 56px); }
 
-    /* Cards elenco */
     .route {
-      display:grid; grid-template-columns: 1fr; gap:.35rem; padding: .65rem .6rem; border:1px solid #e5e7eb; border-radius: 14px; margin:.5rem;
-      background: #fff;
+      display:grid; grid-template-columns: 1fr; gap:.35rem; padding: .65rem .6rem; border:1px solid #e5e7eb; border-radius: 14px; margin:.5rem; background:#fff;
     }
     .route h3 { margin:0; font-size:1rem; }
     .meta { color:var(--muted); font-size:.9rem; display:flex; flex-wrap: wrap; gap:.5rem; }
     .actions { display:flex; gap:.5rem; flex-wrap:wrap; }
 
-    /* Buttons */
-    .btn {
-      appearance:none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
-      border-radius: 12px; padding:.45rem .6rem; font-weight:600; cursor:pointer; min-height:40px;
-    }
+    .btn { appearance:none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
+      border-radius: 12px; padding:.45rem .6rem; font-weight:600; cursor:pointer; min-height:40px; }
     .btn.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
     .btn.ghost { background:#fff; }
     .btn.link { border:0; background:transparent; color:var(--brand); text-decoration: underline; padding:0; min-height:auto; }
 
-    /* Popup */
     .popup { font-size:.95rem; }
     .popup .meta { font-size:.85rem; margin:.2rem 0 .4rem; }
     .popup .popup-actions { display:flex; gap:.35rem; flex-wrap:wrap; }
 
-    /* Toast / Live region */
     #live { position: fixed; left: .75rem; right: .75rem; bottom: .75rem; z-index:1400; }
     .toast { background:#111827; color:#fff; padding:.65rem .8rem; border-radius: 14px; margin-top:.5rem; box-shadow: 0 6px 22px rgba(0,0,0,.3); }
     .toast.warn { background: var(--danger); }
 
-    /* Loading screen */
     .splash {
       position: fixed; inset:0; display:grid; place-items:center; background:var(--bg); z-index:2000;
       transition: opacity .3s ease, visibility .3s ease;
@@ -104,7 +86,6 @@
     .brand-mark .title { font-weight:800; color:var(--brand); font-size:1.3rem; }
     .brand-mark .sub { color:var(--muted); font-size:.95rem; }
 
-    /* Summary panel */
     .summary {
       position: fixed; right:.5rem; top: calc(env(safe-area-inset-top) + 64px);
       background:#ffffff; border:1px solid #e5e7eb; border-radius:14px; padding:.5rem .7rem; z-index:1050; max-width: 320px;
@@ -113,12 +94,11 @@
     .summary h4 { margin:.2rem 0 .3rem; font-size:.95rem; color:var(--brand-2); }
     .summary .small { color:var(--muted); font-size:.85rem; }
     @media (max-width: 720px){ .summary { left:.5rem; right:auto; max-width: 90vw; } }
-
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   </style>
 </head>
 <body>
-  <!-- Splash / loading -->
+  <!-- Splash -->
   <div id="splash" class="splash" aria-live="polite">
     <div class="brand-mark">
       <svg width="48" height="48" viewBox="0 0 24 24" role="img" aria-label="Logo" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -137,29 +117,23 @@
       <input id="search" type="search" placeholder="Cerca per titolo… (es. Palanzana)" autocomplete="off" inputmode="search" />
     </div>
     <button id="btn-list" class="header-btn" aria-haspopup="dialog" aria-controls="drawer" title="Apri elenco itinerari">Itinerari</button>
-    <button id="btn-geolocate" class="header-btn" title="Posizione attuale" aria-label="Posizione attuale">
-      <span class="icon">📍</span>
-    </button>
+    <button id="btn-geolocate" class="header-btn" title="Posizione attuale" aria-label="Posizione attuale"><span class="icon">📍</span></button>
   </header>
 
   <!-- Map -->
-  <main id="app" role="application" aria-label="Mappa itinerari">
-    <div id="map"></div>
-  </main>
+  <main id="app" role="application" aria-label="Mappa itinerari"><div id="map"></div></main>
 
-  <!-- Drawer / Modal -->
+  <!-- Drawer -->
   <div id="backdrop" class="backdrop" aria-hidden="true" aria-label="Sfondo modale"></div>
   <section id="drawer" class="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title">
     <div class="drawer-header">
       <div id="drawer-title" class="drawer-title">Itinerari</div>
       <button id="drawer-close" class="btn">Chiudi</button>
     </div>
-    <div class="drawer-body">
-      <div id="routes-list" aria-live="polite" aria-busy="true"></div>
-    </div>
+    <div class="drawer-body"><div id="routes-list" aria-live="polite" aria-busy="true"></div></div>
   </section>
 
-  <!-- Summary panel -->
+  <!-- Summary -->
   <aside class="summary" aria-live="polite">
     <h4>Stato caricamento</h4>
     <div class="small">
@@ -169,22 +143,17 @@
     </div>
   </aside>
 
-  <!-- Live region for toasts -->
+  <!-- Live region -->
   <div id="live" aria-live="assertive" aria-atomic="true"></div>
 
-  <!-- Leaflet core -->
+  <!-- Libs -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-  <!-- GPX plugin -->
   <script src="https://unpkg.com/leaflet-gpx@1.7.0/gpx.min.js"></script>
-  <!-- Locate control -->
   <script src="https://unpkg.com/leaflet.locatecontrol@0.79.0/dist/L.Control.Locate.min.js"></script>
 
   <script>
-    /*********************************************************
-     * TomTomTuscia – MVP (con "Mostra/Nascondi traccia" fixato)
-     *********************************************************/
+    /*************** TomTomTuscia – MVP ***************/
 
-    // ======= Data =======
     const GPX_FILES = [
       "Anello Blera-Barbarano- Sentiero delle Mole-.gpx",
       "Castel guiliano corretto.gpx",
@@ -199,240 +168,151 @@
     ];
 
     const ROUTES = [];
-    const ROUTE_INDEX = new Map(); // id -> route
-    const MARKERS = new Map();     // id -> Leaflet marker
+    const ROUTE_INDEX = new Map();
+    const MARKERS = new Map();
     let map, tiles, gpxLayer = null, locateControl = null;
 
-    // Debounce helper
-    function debounce(fn, wait=180){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args), wait); }; }
+    const debounce = (fn,wait=180)=>{ let t; return(...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),wait);} };
+    const toast = (msg,{warn=false}={})=>{ const L=document.getElementById('live'); const el=document.createElement('div'); el.className='toast'+(warn?' warn':''); el.textContent=msg; L.appendChild(el); setTimeout(()=>el.remove(),4800); };
+    const fmt = { km:n=>(Math.round(n*10)/10).toFixed(1), m:n=>Math.round(n), h:n=>(Math.round(n*10)/10).toFixed(1) };
+    const filenameToTitle = n => n.replace(/\.gpx$/i,'').replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim().replace(/\b\w/g,c=>c.toUpperCase());
+    function haversine(a,b,c,d){ const R=6371000,toRad=x=>x*Math.PI/180; const dLat=toRad(c-a), dLon=toRad(d-b); const s=Math.sin(dLat/2)**2+Math.cos(toRad(a))*Math.cos(toRad(c))*Math.sin(dLon/2)**2; return 2*R*Math.asin(Math.sqrt(s)); }
 
-    // Toast helper
-    function toast(msg, {warn=false}={}) {
-      const live = document.getElementById('live');
-      const el = document.createElement('div');
-      el.className = 'toast' + (warn ? ' warn' : '');
-      el.textContent = msg;
-      live.appendChild(el);
-      setTimeout(()=>{ el.remove(); }, 4800);
-    }
-
-    // Pretty numbers
-    const fmt = {
-      km: n => (Math.round(n*10)/10).toFixed(1),
-      m: n => Math.round(n),
-      h: n => (Math.round(n*10)/10).toFixed(1)
-    };
-
-    function filenameToTitle(name){
-      const base = name.replace(/\.gpx$/i,'');
-      return base.replace(/[_\-]+/g,' ').replace(/\s+/g,' ').trim()
-        .replace(/\b\w/g, c => c.toUpperCase());
-    }
-
-    function haversine(lat1, lon1, lat2, lon2){
-      const R = 6371000, toRad = x => x * Math.PI/180;
-      const dLat = toRad(lat2-lat1), dLon = toRad(lon2-lon1);
-      const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1))*Math.cos(toRad(lat2))*Math.sin(dLon/2)**2;
-      return 2*R*Math.asin(Math.sqrt(a));
-    }
-
-    // ======= Core =======
     async function initMap(){
-      map = L.map('map', { zoomControl: true, preferCanvas: true });
-      tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      }).addTo(map);
+      map = L.map('map',{ zoomControl:true, preferCanvas:true });
+      tiles = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{ maxZoom:19, attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors' }).addTo(map);
 
       locateControl = L.control.locate({
-        position: 'topleft',
-        setView: 'untilPan',
-        keepCurrentZoomLevel: false,
-        flyTo: true,
-        drawCircle: true,
-        showPopup: false,
-        strings: {
-          title: "Mostra la mia posizione",
-          metersUnit: "metri",
-          feetUnit: "piedi",
-          popup: "Sei nel raggio di {distance} {unit} da questo punto",
-          outsideMapBoundsMsg: "Sembra tu sia fuori dai limiti della mappa"
-        },
-        locateOptions: { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 }
+        position:'topleft', setView:'untilPan', keepCurrentZoomLevel:false, flyTo:true, drawCircle:true, showPopup:false,
+        strings:{ title:"Mostra la mia posizione", metersUnit:"metri", feetUnit:"piedi", popup:"Sei nel raggio di {distance} {unit} da questo punto", outsideMapBoundsMsg:"Sembra tu sia fuori dai limiti della mappa" },
+        locateOptions:{ enableHighAccuracy:true, maximumAge:5000, timeout:15000 }
       }).addTo(map);
 
-      map.on('locationerror', () => {
-        toast("Geolocalizzazione non disponibile o permesso negato.", {warn:true});
-      });
+      map.on('locationerror', ()=> toast("Geolocalizzazione non disponibile o permesso negato.",{warn:true}));
 
       await loadAndParseGpxFiles();
       renderMarkers();
       fitAllBounds();
 
-      document.getElementById('splash').classList.add('hidden');
+      // Wiring GLOBALE per ogni popup che si apre
+      map.on('popupopen', (e)=> wirePopupButtons(e.popup.getElement()));
 
+      document.getElementById('splash').classList.add('hidden');
       document.getElementById('btn-list').addEventListener('click', openItinerariesModal);
       document.getElementById('drawer-close').addEventListener('click', ()=> toggleDrawer(false));
       document.getElementById('backdrop').addEventListener('click', ()=> toggleDrawer(false));
-      document.getElementById('btn-geolocate').addEventListener('click', ()=> { startFollowMode(); });
+      document.getElementById('btn-geolocate').addEventListener('click', ()=> startFollowMode());
+      document.getElementById('search').addEventListener('input', debounce(applySearch,150));
 
-      document.getElementById('search').addEventListener('input', debounce(applySearch, 150));
-
-      // ESC per nascondere traccia
-      window.addEventListener('keydown', (e)=>{
-        if (e.key === 'Escape' && gpxLayer){
-          try { map.removeLayer(gpxLayer); } catch {}
-          gpxLayer = null;
-          toast('Traccia nascosta');
-        }
-      });
+      // ESC nasconde traccia
+      window.addEventListener('keydown',(e)=>{ if(e.key==='Escape'&&gpxLayer){ try{map.removeLayer(gpxLayer);}catch{} gpxLayer=null; toast('Traccia nascosta'); }});
     }
 
     function fitAllBounds(){
-      const pts = [];
-      ROUTES.forEach(r => {
-        if (Number.isFinite(r.lat) && Number.isFinite(r.lng)) pts.push([r.lat, r.lng]);
-      });
-      if (pts.length) map.fitBounds(pts, { padding:[40,40] });
-      else map.setView([42.42, 12.08], 9);
+      const pts = ROUTES.filter(r=>Number.isFinite(r.lat)&&Number.isFinite(r.lng)).map(r=>[r.lat,r.lng]);
+      if (pts.length) map.fitBounds(pts,{padding:[40,40]}); else map.setView([42.42,12.08],9);
     }
 
     async function loadAndParseGpxFiles(){
-      const totalEl = document.getElementById('sum-total');
-      const loadedEl = document.getElementById('sum-loaded');
-      const errorsEl = document.getElementById('sum-errors');
-      const messagesEl = document.getElementById('sum-messages');
-      totalEl.textContent = GPX_FILES.length;
-
-      const errors = [];
-      let loaded = 0;
+      const totalEl=document.getElementById('sum-total'), loadedEl=document.getElementById('sum-loaded'), errorsEl=document.getElementById('sum-errors'), messagesEl=document.getElementById('sum-messages');
+      totalEl.textContent=GPX_FILES.length;
+      const errors=[]; let loaded=0;
 
       for (const file of GPX_FILES){
-        const url = `./gpx/${file}`;
-        try {
-          const res = await fetch(url, {cache:'no-store'});
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const txt = await res.text();
-          const dom = new DOMParser().parseFromString(txt, "application/xml");
-          const parserErr = dom.querySelector("parsererror");
-          if (parserErr) throw new Error("GPX malformato");
-          const stats = parseGpxToStats(dom, file, url);
-          ROUTES.push(stats);
-          ROUTE_INDEX.set(stats.id, stats);
-          loaded++; loadedEl.textContent = loaded;
-        } catch (err) {
-          console.error("Errore GPX:", file, err);
-          errors.push(`${file} → ${err.message || err}`);
-          errorsEl.textContent = errors.length;
-          messagesEl.innerHTML = `<ul>${errors.map(e=>`<li>${e}</li>`).join('')}</ul>`;
-          toast(`Errore nel caricamento di "${file}". Viene saltato.`, {warn:true});
-          continue;
+        const url=`./gpx/${file}`;
+        try{
+          const res=await fetch(url,{cache:'no-store'}); if(!res.ok) throw new Error(`HTTP ${res.status}`);
+          const txt=await res.text();
+          const dom=new DOMParser().parseFromString(txt,"application/xml");
+          if(dom.querySelector("parsererror")) throw new Error("GPX malformato");
+          const stats=parseGpxToStats(dom,file,url);
+          ROUTES.push(stats); ROUTE_INDEX.set(stats.id,stats);
+          loaded++; loadedEl.textContent=loaded;
+        }catch(err){
+          console.error("Errore GPX:",file,err);
+          errors.push(`${file} → ${err.message||err}`); errorsEl.textContent=errors.length;
+          messagesEl.innerHTML=`<ul>${errors.map(e=>`<li>${e}</li>`).join('')}</ul>`;
+          toast(`Errore nel caricamento di "${file}". Viene saltato.`,{warn:true});
         }
       }
-
-      ROUTES.sort((a,b)=> a.title.localeCompare(b.title, 'it', {sensitivity:'base'}));
+      ROUTES.sort((a,b)=>a.title.localeCompare(b.title,'it',{sensitivity:'base'}));
       renderItinerariesList(ROUTES);
     }
 
     function parseGpxToStats(dom, filename, url){
-      const title = (dom.querySelector('metadata > name, gpx > name, trk > name')?.textContent || filenameToTitle(filename)).trim();
-      const rawDesc = (dom.querySelector('metadata > desc, trk > desc, trk > cmt, gpx > desc')?.textContent || '').trim();
-      let description = rawDesc ? rawDesc.replace(/\s+/g,' ').slice(0, 280) : '';
-      let difficulty = dom.querySelector('metadata > type, trk > type')?.textContent?.trim().toUpperCase() || "E";
-      difficulty = (/^(T|E|EE|EEA)$/i.test(difficulty) ? difficulty.toUpperCase() : "E");
+      const title=(dom.querySelector('metadata > name, gpx > name, trk > name')?.textContent||filenameToTitle(filename)).trim();
+      const rawDesc=(dom.querySelector('metadata > desc, trk > desc, trk > cmt, gpx > desc')?.textContent||'').trim();
+      let description=rawDesc?rawDesc.replace(/\s+/g,' ').slice(0,280):'';
+      let difficulty=dom.querySelector('metadata > type, trk > type')?.textContent?.trim().toUpperCase()||"E";
+      difficulty=(/^(T|E|EE|EEA)$/i.test(difficulty)?difficulty.toUpperCase():"E");
 
-      const trkpts = Array.from(dom.querySelectorAll('trkpt'));
-      const rtepts = trkpts.length ? [] : Array.from(dom.querySelectorAll('rtept'));
-      const pts = (trkpts.length ? trkpts : rtepts).map(p => {
-        const lat = parseFloat(p.getAttribute('lat'));
-        const lon = parseFloat(p.getAttribute('lon'));
-        const ele = parseFloat(p.querySelector('ele')?.textContent ?? 'NaN');
-        const time = p.querySelector('time')?.textContent ? new Date(p.querySelector('time').textContent).getTime() : NaN;
-        return {lat, lon, ele, time};
-      }).filter(p => Number.isFinite(p.lat) && Number.isFinite(p.lon));
+      const trkpts=Array.from(dom.querySelectorAll('trkpt'));
+      const rtepts=trkpts.length?[]:Array.from(dom.querySelectorAll('rtept'));
+      const pts=(trkpts.length?trkpts:rtepts).map(p=>{
+        const lat=parseFloat(p.getAttribute('lat')), lon=parseFloat(p.getAttribute('lon'));
+        const ele=parseFloat(p.querySelector('ele')?.textContent ?? 'NaN');
+        const time=p.querySelector('time')?.textContent ? new Date(p.querySelector('time').textContent).getTime() : NaN;
+        return {lat,lon,ele,time};
+      }).filter(p=>Number.isFinite(p.lat)&&Number.isFinite(p.lon));
 
-      let lat = NaN, lng = NaN;
-      if (pts.length){ lat = pts[0].lat; lng = pts[0].lon; }
+      let lat=NaN,lng=NaN;
+      if(pts.length){ lat=pts[0].lat; lng=pts[0].lon; }
       else {
-        const b = dom.querySelector('bounds');
-        if (b) {
-          const minlat = parseFloat(b.getAttribute('minlat')); const minlon = parseFloat(b.getAttribute('minlon'));
-          const maxlat = parseFloat(b.getAttribute('maxlat')); const maxlon = parseFloat(b.getAttribute('maxlon'));
-          lat = (minlat + maxlat)/2; lng = (minlon + maxlon)/2;
+        const b=dom.querySelector('bounds'); if(b){
+          const minlat=parseFloat(b.getAttribute('minlat')), minlon=parseFloat(b.getAttribute('minlon'));
+          const maxlat=parseFloat(b.getAttribute('maxlat')), maxlon=parseFloat(b.getAttribute('maxlon'));
+          lat=(minlat+maxlat)/2; lng=(minlon+maxlon)/2;
         }
       }
 
-      let dist_m = 0;
-      for (let i=1;i<pts.length;i++){
-        const p1 = pts[i-1], p2 = pts[i];
-        const d = haversine(p1.lat, p1.lon, p2.lat, p2.lon);
-        if (Number.isFinite(d) && d >= 0 && d <= 1000) dist_m += d;
+      let dist_m=0, ascent=0;
+      for(let i=1;i<pts.length;i++){
+        const p1=pts[i-1], p2=pts[i];
+        const d=haversine(p1.lat,p1.lon,p2.lat,p2.lon);
+        if(Number.isFinite(d) && d>=0 && d<=1000) dist_m+=d;
+        const e1=p1.ele, e2=p2.ele; if(Number.isFinite(e1)&&Number.isFinite(e2)){ const de=e2-e1; if(de>1) ascent+=de; }
       }
+      ascent=Math.round(ascent);
 
-      let ascent = 0;
-      for (let i=1;i<pts.length;i++){
-        const e1 = pts[i-1].ele, e2 = pts[i].ele;
-        if (Number.isFinite(e1) && Number.isFinite(e2)) { const de = e2 - e1; if (de > 1) ascent += de; }
-      }
-      ascent = Math.round(ascent);
+      let time_h=NaN; const times=pts.map(p=>p.time).filter(Number.isFinite);
+      if(times.length>=2){ const t=(Math.max(...times)-Math.min(...times))/3600000; if(t>0.05) time_h=t; }
+      if(!Number.isFinite(time_h)){ const dist_km=dist_m/1000; time_h=(dist_km/4)+(ascent/600); }
+      time_h=parseFloat(fmt.h(time_h));
 
-      let time_h = NaN;
-      const times = pts.map(p=>p.time).filter(Number.isFinite);
-      if (times.length >= 2){
-        const t = (Math.max(...times) - Math.min(...times)) / 3600000;
-        if (t > 0.05) time_h = t;
-      }
-      if (!Number.isFinite(time_h)) {
-        const dist_km = dist_m/1000;
-        time_h = (dist_km/4) + (ascent/600);
-      }
-      time_h = parseFloat(fmt.h(time_h));
-
-      const elevs = pts.map(p=>p.ele).filter(Number.isFinite);
-      const eleMin = elevs.length ? Math.min(...elevs) : NaN;
-      const eleMax = elevs.length ? Math.max(...elevs) : NaN;
-
-      const distance_km = parseFloat(fmt.km(dist_m/1000));
-      const id = crypto.randomUUID();
+      const elevs=pts.map(p=>p.ele).filter(Number.isFinite);
+      const eleMin=elevs.length?Math.min(...elevs):NaN, eleMax=elevs.length?Math.max(...elevs):NaN;
 
       return {
-        id, title, lat, lng,
+        id: crypto.randomUUID(),
+        title, lat, lng,
         difficulty,
-        distance_km,
+        distance_km: parseFloat(fmt.km(dist_m/1000)),
         ascent_m: ascent,
         time_h,
         description,
         gpx_url: url,
-        ele_min: eleMin,
-        ele_max: eleMax
+        ele_min: eleMin, ele_max: eleMax
       };
     }
 
     function renderMarkers(){
-      ROUTES.forEach(r => {
-        if (!Number.isFinite(r.lat) || !Number.isFinite(r.lng)) return;
-        if (MARKERS.has(r.id)) return;
-
-        const m = L.marker([r.lat, r.lng]);
-        m.bindPopup(makePopupHtml(r), {className:'ttt-popup'});
-        m.on('popupopen', () => { wirePopupButtons(r.id); });
+      ROUTES.forEach(r=>{
+        if(!Number.isFinite(r.lat)||!Number.isFinite(r.lng)) return;
+        if(MARKERS.has(r.id)) return;
+        const m = L.marker([r.lat,r.lng]).bindPopup(makePopupHtml(r),{className:'ttt-popup'});
         m.addTo(map);
-        MARKERS.set(r.id, m);
+        MARKERS.set(r.id,m);
       });
     }
 
-    // Popup con bottone "Mostra/Nascondi traccia"
     function makePopupHtml(route){
       return `
         <div class="popup">
           <strong>${escapeHtml(route.title)}</strong>
           <div class="meta">
-            <span>Diff: ${escapeHtml(route.difficulty)}</span>
-            <span>·</span>
-            <span>${fmt.km(route.distance_km)} km</span>
-            <span>·</span>
-            <span>+${fmt.m(route.ascent_m)} m</span>
-            <span>·</span>
+            <span>Diff: ${escapeHtml(route.difficulty)}</span><span>·</span>
+            <span>${fmt.km(route.distance_km)} km</span><span>·</span>
+            <span>+${fmt.m(route.ascent_m)} m</span><span>·</span>
             <span>${fmt.h(route.time_h)} h</span>
           </div>
           <div class="popup-actions">
@@ -441,220 +321,167 @@
             <button class="btn ghost" data-action="download" data-id="${route.id}">Scarica GPX</button>
             <button class="btn" data-action="details" data-id="${route.id}">Dettagli</button>
           </div>
-        </div>
-      `;
+        </div>`;
     }
 
-    function wirePopupButtons(routeId){
-      const container = document.querySelector('.ttt-popup .popup') || document;
-      container.querySelectorAll(`[data-id="${routeId}"]`).forEach(btn=>{
-        const action = btn.getAttribute('data-action');
-        if (action === 'details') btn.addEventListener('click', () => openRouteDetail(routeId));
-        if (action === 'follow') btn.addEventListener('click', () => startFollowOnRoute(routeId));
-        if (action === 'show') btn.addEventListener('click', () => toggleTrackOnRoute(routeId));
-        if (action === 'download') btn.addEventListener('click', () => downloadGpx(routeId));
+    // Wiring robusto sul popup corrente
+    function wirePopupButtons(rootEl){
+      if(!rootEl) return;
+      rootEl.querySelectorAll('[data-action]').forEach(btn=>{
+        const action=btn.getAttribute('data-action');
+        const id=btn.getAttribute('data-id');
+        if(action==='details')  btn.onclick=()=>openRouteDetail(id);
+        if(action==='follow')   btn.onclick=()=>startFollowOnRoute(id);
+        if(action==='show')     btn.onclick=()=>toggleTrackOnRoute(id);
+        if(action==='download') btn.onclick=()=>downloadGpx(id);
       });
     }
 
     function applySearch(){
-      const q = document.getElementById('search').value.trim().toLowerCase();
-      const filtered = ROUTES.filter(r => r.title.toLowerCase().includes(q));
-      if (document.getElementById('drawer').classList.contains('open')) renderItinerariesList(filtered);
-      MARKERS.forEach((m, id) => {
-        const r = ROUTE_INDEX.get(id);
-        const matched = filtered.includes(r);
-        if (matched) m.addTo(map); else map.removeLayer(m);
-      });
-      if (filtered.length === 1){ focusRouteOnMap(filtered[0].id, {openPopup:true}); }
-      if (!filtered.length){ toast("Nessun itinerario trovato per la ricerca corrente."); }
+      const q=document.getElementById('search').value.trim().toLowerCase();
+      const filtered=ROUTES.filter(r=>r.title.toLowerCase().includes(q));
+      if(document.getElementById('drawer').classList.contains('open')) renderItinerariesList(filtered);
+      MARKERS.forEach((m,id)=>{ const r=ROUTE_INDEX.get(id); filtered.includes(r)?m.addTo(map):map.removeLayer(m); });
+      if(filtered.length===1) focusRouteOnMap(filtered[0].id,{openPopup:true});
+      if(!filtered.length) toast("Nessun itinerario trovato per la ricerca corrente.");
     }
 
     function openItinerariesModal(){ renderItinerariesList(ROUTES); toggleDrawer(true); }
 
     function renderItinerariesList(list){
-      const wrap = document.getElementById('routes-list');
-      wrap.setAttribute('aria-busy', 'true');
-      if (!list.length) { wrap.innerHTML = `<p>Nessun risultato.</p>`; wrap.setAttribute('aria-busy','false'); return; }
-      const html = list.map(r => `
+      const wrap=document.getElementById('routes-list');
+      wrap.setAttribute('aria-busy','true');
+      if(!list.length){ wrap.innerHTML=`<p>Nessun risultato.</p>`; wrap.setAttribute('aria-busy','false'); return; }
+      wrap.innerHTML=list.map(r=>`
         <article class="route" data-id="${r.id}">
           <h3>${escapeHtml(r.title)}</h3>
           <div class="meta">
-            <span>Diff: ${escapeHtml(r.difficulty)}</span>
-            <span>·</span>
-            <span>${fmt.km(r.distance_km)} km</span>
-            <span>·</span>
-            <span>+${fmt.m(r.ascent_m)} m</span>
-            <span>·</span>
+            <span>Diff: ${escapeHtml(r.difficulty)}</span><span>·</span>
+            <span>${fmt.km(r.distance_km)} km</span><span>·</span>
+            <span>+${fmt.m(r.ascent_m)} m</span><span>·</span>
             <span>${fmt.h(r.time_h)} h</span>
           </div>
-          ${r.description ? `<p>${escapeHtml(r.description)}</p>` : ``}
+          ${r.description?`<p>${escapeHtml(r.description)}</p>`:''}
           <div class="actions">
             <button class="btn primary" data-act="detail" data-id="${r.id}">Apri descrizione</button>
             <button class="btn" data-act="focus" data-id="${r.id}">Vai in mappa</button>
             <button class="btn ghost" data-act="download" data-id="${r.id}">Scarica GPX</button>
           </div>
-        </article>
-      `).join('');
-      wrap.innerHTML = html;
-      wrap.querySelectorAll('[data-act="detail"]').forEach(b=> b.onclick=()=> openRouteDetail(b.dataset.id));
-      wrap.querySelectorAll('[data-act="focus"]').forEach(b=> b.onclick=()=> { toggleDrawer(false); focusRouteOnMap(b.dataset.id, {openPopup:true}); });
-      wrap.querySelectorAll('[data-act="download"]').forEach(b=> b.onclick=()=> downloadGpx(b.dataset.id));
-      wrap.setAttribute('aria-busy', 'false');
+        </article>`).join('');
+      wrap.querySelectorAll('[data-act="detail"]').forEach(b=>b.onclick=()=>openRouteDetail(b.dataset.id));
+      wrap.querySelectorAll('[data-act="focus"]').forEach(b=>b.onclick=()=>{ toggleDrawer(false); focusRouteOnMap(b.dataset.id,{openPopup:true}); });
+      wrap.querySelectorAll('[data-act="download"]').forEach(b=>b.onclick=()=>downloadGpx(b.dataset.id));
+      wrap.setAttribute('aria-busy','false');
     }
 
     function openRouteDetail(id){
-      const r = ROUTE_INDEX.get(id);
-      if (!r) return;
-      const wrap = document.getElementById('routes-list');
-      const backBtn = `<button class="btn" id="detail-back">← Indietro</button>`;
-      const html = `
-        ${backBtn}
+      const r=ROUTE_INDEX.get(id); if(!r) return;
+      const wrap=document.getElementById('routes-list');
+      wrap.innerHTML=`
+        <button class="btn" id="detail-back">← Indietro</button>
         <article class="route">
           <h3>${escapeHtml(r.title)}</h3>
           <div class="meta">
-            <span>Diff: ${escapeHtml(r.difficulty)}</span>
-            <span>·</span>
-            <span>${fmt.km(r.distance_km)} km</span>
-            <span>·</span>
-            <span>+${fmt.m(r.ascent_m)} m</span>
-            <span>·</span>
+            <span>Diff: ${escapeHtml(r.difficulty)}</span><span>·</span>
+            <span>${fmt.km(r.distance_km)} km</span><span>·</span>
+            <span>+${fmt.m(r.ascent_m)} m</span><span>·</span>
             <span>${fmt.h(r.time_h)} h</span>
-            ${Number.isFinite(r.ele_min) && Number.isFinite(r.ele_max) ? `<span>·</span><span>${fmt.m(r.ele_min)}–${fmt.m(r.ele_max)} m slm</span>` : ``}
+            ${Number.isFinite(r.ele_min)&&Number.isFinite(r.ele_max)?`<span>·</span><span>${fmt.m(r.ele_min)}–${fmt.m(r.ele_max)} m slm</span>`:''}
           </div>
-          ${r.description ? `<p>${escapeHtml(r.description)}</p>` : `<p class="meta">Nessuna descrizione disponibile.</p>`}
+          ${r.description?`<p>${escapeHtml(r.description)}</p>`:`<p class="meta">Nessuna descrizione disponibile.</p>`}
           <div class="actions">
             <button class="btn" onclick="toggleTrackOnRoute('${r.id}')">Mostra/Nascondi traccia</button>
             <button class="btn primary" onclick="startFollowOnRoute('${r.id}')">Segui il percorso</button>
             <button class="btn" onclick="focusRouteOnMap('${r.id}', {openPopup:true})">Vai in mappa</button>
             <button class="btn ghost" onclick="downloadGpx('${r.id}')">Scarica GPX</button>
           </div>
-        </article>
-      `;
-      wrap.innerHTML = html;
+        </article>`;
       toggleDrawer(true);
-      document.getElementById('detail-back').onclick = ()=> renderItinerariesList(ROUTES);
+      document.getElementById('detail-back').onclick=()=>renderItinerariesList(ROUTES);
     }
 
-    function focusRouteOnMap(id, {openPopup=false}={}){
-      const r = ROUTE_INDEX.get(id);
-      if (!r) return;
-      const m = MARKERS.get(id);
-      if (m) {
-        map.setView(m.getLatLng(), Math.max(map.getZoom(), 13), {animate:true});
-        if (openPopup) { m.openPopup(); }
-      }
+    function focusRouteOnMap(id,{openPopup=false}={}){
+      const r=ROUTE_INDEX.get(id); if(!r) return;
+      const m=MARKERS.get(id);
+      if(m){ map.setView(m.getLatLng(), Math.max(map.getZoom(),13), {animate:true}); if(openPopup) m.openPopup(); }
     }
 
-    // ======= Traccia: mostra/nascondi ed evidenzia; follow GPS =======
+    // ===== Traccia: mostra/nascondi & follow =====
     async function toggleTrackOnRoute(id){
-      const r = ROUTE_INDEX.get(id);
-      if (!r) return;
-
-      // se la traccia corrente è la stessa → nascondi
-      if (gpxLayer && gpxLayer.__routeId === id) {
-        try { map.removeLayer(gpxLayer); } catch {}
-        gpxLayer = null;
-        stopFollowMode();
-        toast('Traccia nascosta');
-        return;
+      const r=ROUTE_INDEX.get(id); if(!r) return;
+      if(gpxLayer && gpxLayer.__routeId===id){
+        try{ map.removeLayer(gpxLayer);}catch{} gpxLayer=null; stopFollowMode(); toast('Traccia nascosta'); return;
       }
-
-      stopFollowMode(); // mostra semplice: niente follow
-      await drawTrack(r, {highlight:true, autoFit:true});
+      stopFollowMode();
+      await drawTrack(r,{highlight:true,autoFit:true});
       toast(`Traccia di "${r.title}" visibile.`);
     }
 
     async function startFollowOnRoute(id){
-      const r = ROUTE_INDEX.get(id);
-      if (!r) return;
-      await drawTrack(r, {highlight:true, autoFit:true});
+      const r=ROUTE_INDEX.get(id); if(!r) return;
+      await drawTrack(r,{highlight:true,autoFit:true});
       startFollowMode();
       toast(`Modalità follow attiva su "${r.title}".`);
     }
 
-    // Disegna la traccia, risolve quando il plugin ha emesso 'loaded'
-    function drawTrack(route, {highlight=false, autoFit=false}={}){
-      if (gpxLayer) { try { map.removeLayer(gpxLayer); } catch{}; gpxLayer = null; }
+    function drawTrack(route,{highlight=false,autoFit=false}={}){
+      if(gpxLayer){ try{map.removeLayer(gpxLayer);}catch{} gpxLayer=null; }
+      const polyStyle = highlight? {color:'#0ea5e9', weight:7, opacity:0.95} : {color:'#065f46', weight:4, opacity:0.9};
+      const src = encodeURI(route.gpx_url);
 
-      const polyStyle = highlight
-        ? { color: '#0ea5e9', weight: 7, opacity: 0.95 }
-        : { color: '#065f46', weight: 4, opacity: 0.9 };
-
-      const src = encodeURI(route.gpx_url); // gestisce spazi/caratteri speciali
-
-      return new Promise((resolve, reject) => {
-        gpxLayer = new L.GPX(src, {
-          async: true,
+      return new Promise((resolve,reject)=>{
+        gpxLayer = new L.GPX(src,{
+          async:true,
           polyline_options: polyStyle,
-          marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
+          marker_options:{ startIconUrl:null, endIconUrl:null, shadowUrl:null }
         })
-        .on('loaded', (e) => {
+        .on('loaded',(e)=>{
           gpxLayer.__routeId = route.id;
-          // fitBounds SOLO quando i bounds sono pronti e validi
-          if (autoFit && e.target.getBounds && e.target.getBounds().isValid()){
-            map.fitBounds(e.target.getBounds(), { padding:[30,30] });
-          }
+          if(autoFit && e.target.getBounds && e.target.getBounds().isValid()) map.fitBounds(e.target.getBounds(),{padding:[30,30]});
+          if(gpxLayer.bringToFront) gpxLayer.bringToFront();
+          toast('Traccia caricata ✅');
           resolve();
         })
-        .on('error', () => {
-          toast('Impossibile disegnare la traccia GPX.', {warn:true});
+        .on('error',()=>{
+          toast('Impossibile disegnare la traccia GPX.',{warn:true});
           reject(new Error('gpx-load-failed'));
         })
         .addTo(map);
       });
     }
 
-    function startFollowMode(){
-      try { locateControl.start(); }
-      catch { map.locate({setView:true, enableHighAccuracy:true}); }
-    }
-
-    function stopFollowMode(){
-      try { locateControl.stop(); } catch {}
-    }
+    function startFollowMode(){ try{ locateControl.start(); } catch{ map.locate({setView:true, enableHighAccuracy:true}); } }
+    function stopFollowMode(){ try{ locateControl.stop(); } catch{} }
 
     function downloadGpx(id){
-      const r = ROUTE_INDEX.get(id);
-      if (!r) return;
-      const link = document.createElement('a');
-      link.href = r.gpx_url;
-      const niceName = `${r.title.replace(/[^\w\s-]+/g,'').replace(/\s+/g,'_')}.gpx`;
-      link.download = niceName;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
+      const r=ROUTE_INDEX.get(id); if(!r) return;
+      const a=document.createElement('a'); a.href=r.gpx_url;
+      a.download=`${r.title.replace(/[^\w\s-]+/g,'').replace(/\s+/g,'_')}.gpx`;
+      document.body.appendChild(a); a.click(); a.remove();
     }
 
-    // ======= Helpers & UI =======
     function toggleDrawer(open){
-      const drawer = document.getElementById('drawer');
-      const backdrop = document.getElementById('backdrop');
-      if (open){ drawer.classList.add('open'); backdrop.setAttribute('aria-hidden', 'false'); }
-      else { drawer.classList.remove('open'); backdrop.setAttribute('aria-hidden', 'true'); }
+      const drawer=document.getElementById('drawer'), backdrop=document.getElementById('backdrop');
+      if(open){ drawer.classList.add('open'); backdrop.setAttribute('aria-hidden','false'); }
+      else { drawer.classList.remove('open'); backdrop.setAttribute('aria-hidden','true'); }
     }
-    function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+    function escapeHtml(str=''){ return String(str).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
 
-    // ======= Exposed (per specifica) =======
-    window.initMap = initMap;
-    window.loadAndParseGpxFiles = loadAndParseGpxFiles;
-    window.parseGpxToStats = parseGpxToStats;
-    window.renderMarkers = renderMarkers;
-    window.applySearch = applySearch;
-    window.openItinerariesModal = openItinerariesModal;
-    window.renderItinerariesList = renderItinerariesList;
-    window.openRouteDetail = openRouteDetail;
-    window.focusRouteOnMap = focusRouteOnMap;
-    window.startFollowMode = startFollowMode;
-    window.stopFollowMode = stopFollowMode;
-    window.downloadGpx = downloadGpx;
-    window.toggleTrackOnRoute = toggleTrackOnRoute;
-    window.startFollowOnRoute = startFollowOnRoute;
+    // Expose (per specifica)
+    window.openItinerariesModal=openItinerariesModal;
+    window.renderItinerariesList=renderItinerariesList;
+    window.openRouteDetail=openRouteDetail;
+    window.focusRouteOnMap=focusRouteOnMap;
+    window.startFollowMode=startFollowMode;
+    window.stopFollowMode=stopFollowMode;
+    window.downloadGpx=downloadGpx;
+    window.toggleTrackOnRoute=toggleTrackOnRoute;
+    window.startFollowOnRoute=startFollowOnRoute;
 
-    // ======= Kickoff =======
     window.addEventListener('DOMContentLoaded', initMap);
   </script>
 
-  <!-- =================== ISTRUZIONI GITHUB PAGES =================== -->
+  <!-- ISTRUZIONI PAGES -->
   <details style="position:fixed; left:.5rem; bottom:.5rem; z-index:1200; background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:.4rem .6rem; max-width:calc(100% - 1rem);">
     <summary><strong>Pubblica su GitHub Pages</strong></summary>
     <ol>
@@ -673,12 +500,10 @@
           <li>Tra i sassi del predicatore e la selva di Malano.gpx</li>
         </ul>
       </li>
-      <li>Vai su <em>Settings → Pages</em> e imposta:
-        <ul><li><strong>Branch</strong>: <code>main</code>, <strong>Folder</strong>: <code>/ (root)</code></li></ul>
-      </li>
+      <li>Settings → Pages → <strong>Branch</strong> <code>main</code>, <strong>Folder</strong> <code>/ (root)</code></li>
       <li>Apri l’URL pubblico: <code>https://&lt;utente&gt;.github.io/&lt;repo&gt;/</code></li>
     </ol>
-    <p>Nota: i percorsi ai file GPX sono relativi (<code>./gpx/...</code>) e funzionano sia in locale (con un semplice server statico) sia su Pages.</p>
+    <p>Nota: i percorsi GPX sono relativi (<code>./gpx/...</code>) e funzionano anche in locale con un semplice server statico.</p>
   </details>
 </body>
 </html>
