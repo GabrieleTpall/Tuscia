@@ -26,6 +26,8 @@
     body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Arial, "Apple Color Emoji", "Segoe UI Emoji"; background: var(--bg); color: var(--ink); }
     a { color: var(--brand); }
     a:focus, button:focus, input:focus { outline: 3px solid var(--ring); outline-offset: 2px; }
+
+    /* Header */
     header {
       position: fixed; inset: 0 0 auto 0; z-index: 1000;
       display: grid; grid-template-columns: auto 1fr auto auto;
@@ -46,8 +48,12 @@
     }
     .header-btn:hover { border-color:#9ca3af; }
     .icon { font-size: 1.1rem; }
-    #map { position: absolute; inset: 56px 0 0 0; }
+
+    /* Map */
+    #map { position: absolute; inset: 56px 0 0 0; } /* under header */
     @media (min-width:640px){ #map{ inset: 60px 0 0 0; } }
+
+    /* Modal / Drawer */
     .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 1100; display:none; }
     .backdrop[aria-hidden="false"]{ display:block; }
     .drawer {
@@ -59,6 +65,8 @@
     .drawer-header { display:flex; align-items:center; justify-content:space-between; padding: .75rem 1rem; border-bottom:1px solid #e5e7eb; }
     .drawer-title { font-weight:800; color:var(--brand); }
     .drawer-body { padding: .25rem .5rem 1rem; overflow:auto; max-height: calc(78vh - 56px); }
+
+    /* Cards elenco */
     .route {
       display:grid; grid-template-columns: 1fr; gap:.35rem; padding: .65rem .6rem; border:1px solid #e5e7eb; border-radius: 14px; margin:.5rem;
       background: #fff;
@@ -66,6 +74,8 @@
     .route h3 { margin:0; font-size:1rem; }
     .meta { color:var(--muted); font-size:.9rem; display:flex; flex-wrap: wrap; gap:.5rem; }
     .actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+
+    /* Buttons */
     .btn {
       appearance:none; border:1px solid #d1d5db; background:#fff; color:var(--ink);
       border-radius: 12px; padding:.45rem .6rem; font-weight:600; cursor:pointer; min-height:40px;
@@ -73,12 +83,18 @@
     .btn.primary { background: var(--brand); color:#fff; border-color: var(--brand); }
     .btn.ghost { background:#fff; }
     .btn.link { border:0; background:transparent; color:var(--brand); text-decoration: underline; padding:0; min-height:auto; }
+
+    /* Popup */
     .popup { font-size:.95rem; }
     .popup .meta { font-size:.85rem; margin:.2rem 0 .4rem; }
     .popup .popup-actions { display:flex; gap:.35rem; flex-wrap:wrap; }
+
+    /* Toast / Live region */
     #live { position: fixed; left: .75rem; right: .75rem; bottom: .75rem; z-index:1400; }
     .toast { background:#111827; color:#fff; padding:.65rem .8rem; border-radius: 14px; margin-top:.5rem; box-shadow: 0 6px 22px rgba(0,0,0,.3); }
     .toast.warn { background: var(--danger); }
+
+    /* Loading screen */
     .splash {
       position: fixed; inset:0; display:grid; place-items:center; background:var(--bg); z-index:2000;
       transition: opacity .3s ease, visibility .3s ease;
@@ -87,6 +103,8 @@
     .brand-mark { display:flex; flex-direction:column; align-items:center; gap:.5rem; }
     .brand-mark .title { font-weight:800; color:var(--brand); font-size:1.3rem; }
     .brand-mark .sub { color:var(--muted); font-size:.95rem; }
+
+    /* Summary panel */
     .summary {
       position: fixed; right:.5rem; top: calc(env(safe-area-inset-top) + 64px);
       background:#ffffff; border:1px solid #e5e7eb; border-radius:14px; padding:.5rem .7rem; z-index:1050; max-width: 320px;
@@ -95,6 +113,7 @@
     .summary h4 { margin:.2rem 0 .3rem; font-size:.95rem; color:var(--brand-2); }
     .summary .small { color:var(--muted); font-size:.85rem; }
     @media (max-width: 720px){ .summary { left:.5rem; right:auto; max-width: 90vw; } }
+
     .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
   </style>
 </head>
@@ -162,7 +181,7 @@
 
   <script>
     /*********************************************************
-     * TomTomTuscia – MVP (aggiornato con "Mostra/Nascondi traccia")
+     * TomTomTuscia – MVP (con "Mostra/Nascondi traccia" fixato)
      *********************************************************/
 
     // ======= Data =======
@@ -402,7 +421,7 @@
       });
     }
 
-    // Popup con nuovo bottone "Mostra traccia"
+    // Popup con bottone "Mostra/Nascondi traccia"
     function makePopupHtml(route){
       return `
         <div class="popup">
@@ -531,53 +550,58 @@
       const r = ROUTE_INDEX.get(id);
       if (!r) return;
 
-      // se la traccia corrente è della stessa route → nascondi
+      // se la traccia corrente è la stessa → nascondi
       if (gpxLayer && gpxLayer.__routeId === id) {
         try { map.removeLayer(gpxLayer); } catch {}
         gpxLayer = null;
-        stopFollowMode(); // se era attivo
+        stopFollowMode();
         toast('Traccia nascosta');
         return;
       }
 
       stopFollowMode(); // mostra semplice: niente follow
-      await drawTrack(r, {highlight:true});
-      focusTrackBounds();
+      await drawTrack(r, {highlight:true, autoFit:true});
       toast(`Traccia di "${r.title}" visibile.`);
     }
 
     async function startFollowOnRoute(id){
       const r = ROUTE_INDEX.get(id);
       if (!r) return;
-      await drawTrack(r, {highlight:true});
-      focusTrackBounds();
+      await drawTrack(r, {highlight:true, autoFit:true});
       startFollowMode();
       toast(`Modalità follow attiva su "${r.title}".`);
     }
 
-    async function drawTrack(route, {highlight=false}={}){
+    // Disegna la traccia, risolve quando il plugin ha emesso 'loaded'
+    function drawTrack(route, {highlight=false, autoFit=false}={}){
       if (gpxLayer) { try { map.removeLayer(gpxLayer); } catch{}; gpxLayer = null; }
 
       const polyStyle = highlight
         ? { color: '#0ea5e9', weight: 7, opacity: 0.95 }
         : { color: '#065f46', weight: 4, opacity: 0.9 };
 
-      gpxLayer = new L.GPX(route.gpx_url, {
-        async: true,
-        polyline_options: polyStyle,
-        marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
-      })
-      .on('error', () => { toast('Impossibile disegnare la traccia GPX.', {warn:true}); })
-      .addTo(map);
+      const src = encodeURI(route.gpx_url); // gestisce spazi/caratteri speciali
 
-      gpxLayer.__routeId = route.id;
-      await new Promise(res => setTimeout(res, 50));
-    }
-
-    function focusTrackBounds(){
-      if (gpxLayer && gpxLayer.getBounds && gpxLayer.getBounds().isValid()){
-        map.fitBounds(gpxLayer.getBounds(), { padding:[30,30] });
-      }
+      return new Promise((resolve, reject) => {
+        gpxLayer = new L.GPX(src, {
+          async: true,
+          polyline_options: polyStyle,
+          marker_options: { startIconUrl: null, endIconUrl: null, shadowUrl: null }
+        })
+        .on('loaded', (e) => {
+          gpxLayer.__routeId = route.id;
+          // fitBounds SOLO quando i bounds sono pronti e validi
+          if (autoFit && e.target.getBounds && e.target.getBounds().isValid()){
+            map.fitBounds(e.target.getBounds(), { padding:[30,30] });
+          }
+          resolve();
+        })
+        .on('error', () => {
+          toast('Impossibile disegnare la traccia GPX.', {warn:true});
+          reject(new Error('gpx-load-failed'));
+        })
+        .addTo(map);
+      });
     }
 
     function startFollowMode(){
